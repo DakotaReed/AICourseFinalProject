@@ -32,7 +32,7 @@ async def main():
 
     print("🚧 Starting task:", todo_task)
 
-    agent = Agent(task=todo_task, llm=llm)
+    agent = Agent(task=todo_task, llm=llm, verbose=True)
 
     logs = await agent.run()
     print(f"\nFinal Result: {logs.final_result()}")
