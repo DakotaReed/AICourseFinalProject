@@ -1,22 +1,23 @@
-import asyncio
 import os
+import asyncio
 from dotenv import load_dotenv
 from browser_use import Agent
-from langchain_groq import ChatGroq
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 load_dotenv()
-groq_api_key = os.environ.get("GROQ_API_KEY")
+google_api_key = os.environ.get("GOOGLE_API_KEY")
 
 class AsyncLLMAdapter:
     def __init__(self, sync_llm):
         self.sync_llm = sync_llm
-        self.model = getattr(sync_llm, "model", "llama3-90b-8192")
+        self.model = getattr(sync_llm, "model", "gemini-2.5-flash-preview-04-17")
+        self.provider = "google"
         self.model_name = self.model
-        self.provider = "groq"
 
     async def ainvoke(self, *args, **kwargs):
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, lambda: self.sync_llm.invoke(*args, **kwargs))
+
 
 async def main():
     todo_task = (
@@ -27,7 +28,7 @@ async def main():
         "Finally, confirm that 'Buy Milk' is marked as completed."
     )
 
-    sync_llm = ChatGroq(model="llama3-90b-8192", groq_api_key=groq_api_key)
+    sync_llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash-preview-04-17", google_api_key=google_api_key)
     llm = AsyncLLMAdapter(sync_llm)
 
     print("🚧 Starting task:", todo_task)

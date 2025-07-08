@@ -22,10 +22,10 @@ def run_alumnium():
     ], check=True)
 
     # Optionally open it in browser
-    subprocess.run([
+    subprocess.Popen([
         r'C:\Users\dakot\Desktop\PyLearn\allure-2.34.1\bin\allure.bat',
         'open', 'alumnium_runner/allure-report'
-    ])
+    ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 def run_browser_use():
