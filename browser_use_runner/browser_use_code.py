@@ -21,7 +21,7 @@ class AsyncLLMAdapter:
 
 async def main():
     todo_task = (
-        "Open the page https://todomvc.com/examples/vue/dist/ and wait until it fully loads. "
+        "Open the page https://todomvc.com/examples/react/#/ and wait until it fully loads. "
         "Then find the input with placeholder 'What needs to be done?'. "
         "Type 'Buy Milk' and press Enter. "
         "Then mark the new todo item as completed. "
@@ -33,7 +33,15 @@ async def main():
 
     print("🚧 Starting task:", todo_task)
 
-    agent = Agent(task=todo_task, llm=llm, verbose=True)
+    agent = Agent(
+        task=todo_task,
+        llm=llm,
+        verbose=True,
+        browser_options={
+            "wait_until": "load",
+            "headless": False
+        }
+    )
 
     logs = await agent.run()
     print(f"\nFinal Result: {logs.final_result()}")
