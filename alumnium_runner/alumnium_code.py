@@ -1,34 +1,39 @@
 import os
+import pytest
 from dotenv import load_dotenv
 from selenium.webdriver import Chrome
 from alumnium import Alumni
-from alumnium.models import Model, Provider  # כדי לשלוט ב-provider
+from alumnium.models import Model, Provider
 
+# Load environment variables
 load_dotenv()
 
-# ודא שמפתח קיים
-if not os.environ.get("GOOGLE_API_KEY"):
-    print("❌ GOOGLE_API_KEY חסר בקובץ .env")
-    exit(1)
+# Ensure API key exists
+@pytest.fixture(scope="session", autouse=True)
+def check_api_key():
+    if not os.environ.get("GOOGLE_API_KEY"):
+        pytest.fail("Missing GOOGLE_API_KEY in .env file", pytrace=False)
 
-# נכריח את המחלקה להשתמש ב-Google Gemini
-Model.current = Model(
-    provider=Provider.GOOGLE,
-    name="gemini-2.5-flash-preview-04-17"  # או כל מודל נתמך אחר
-)
+# Set up the LLM provider once for all tests
+@pytest.fixture(scope="session", autouse=True)
+def configure_model():
+    Model.current = Model(
+        provider=Provider.GOOGLE,
+        name="gemini-2.5-flash-preview-04-17"
+    )
 
-def run_test():
+# Selenium WebDriver fixture
+@pytest.fixture
+def driver():
     driver = Chrome()
     driver.get("https://todomvc.com/examples/vue/dist/#/")
-    al = Alumni(driver)  # לא צריך להעביר llm ידנית
-    try:
-        al.do("in input 'What we need to do' Add a to do: 'pick up the kids' and press Enter and wait 2 seconds")
-        al.do("in input 'What we need to do' Add a to do: 'buy milk' and press Enter and wait 2 seconds")
-        al.do("mark all tasks in list complete and wait 2 seconds after it and stop this action when all tasks are marked")
-        al.check("task 'buy milk' is completed")
-        print("✅ הצלחה!")
-    finally:
-        driver.quit()
+    yield driver
+    driver.quit()
 
-if __name__ == "__main__":
-    run_test()
+def test_todomvc_task_completion(driver):
+    al = Alumni(driver)
+
+    al.do("Add a task: 'pick up the kids'")
+    al.do("Add a task: 'buy milk'")
+    al.do("mark all tasks complete and stop when all tasks are marked")
+    al.check("task 'buy milk' is completed")
