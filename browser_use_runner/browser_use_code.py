@@ -1,47 +1,27 @@
-import os
 import asyncio
 from dotenv import load_dotenv
 from browser_use import Agent
-from langchain_google_genai import ChatGoogleGenerativeAI
+from browser_use.llm import ChatGoogle
 
 load_dotenv()
-google_api_key = os.environ.get("GOOGLE_API_KEY")
-
-class AsyncLLMAdapter:
-    def __init__(self, sync_llm):
-        self.sync_llm = sync_llm
-        self.model = getattr(sync_llm, "model", "gemini-2.5-flash-preview-04-17")
-        self.provider = "google"
-        self.model_name = self.model
-
-    async def ainvoke(self, *args, **kwargs):
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, lambda: self.sync_llm.invoke(*args, **kwargs))
-
 
 async def main():
     todo_task = (
-        "Open the page https://todomvc.com/examples/react/#/ and wait until it fully loads. "
+        "Open the page https://todomvc.com/examples/vue/dist/ and wait until it fully loads. "
         "Then find the input with placeholder 'What needs to be done?'. "
         "Type 'Buy Milk' and press Enter. "
         "Then mark the new todo item as completed. "
         "Finally, confirm that 'Buy Milk' is marked as completed."
     )
 
-    sync_llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash-preview-04-17", google_api_key=google_api_key)
-    llm = AsyncLLMAdapter(sync_llm)
-
     print("🚧 Starting task:", todo_task)
 
-    agent = Agent(
-        task=todo_task,
-        llm=llm,
-        verbose=True,
-        browser_options={
-            "wait_until": "load",
-            "headless": False
-        }
-    )
+    agent = Agent(task=todo_task,
+                  llm=ChatGoogle(
+                        model="gemini-2.5-pro",
+                        temperature=0.3,
+                                ),
+                  verbose=True)
 
     logs = await agent.run()
     print(f"\nFinal Result: {logs.final_result()}")
