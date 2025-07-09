@@ -1,5 +1,4 @@
 browser-use==0.4.4
 langchain-anthropic==0.3.3
 rich==14.0.0
-langchain-google-genai
 python-dotenv
